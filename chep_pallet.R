@@ -26,7 +26,7 @@ gtl %>%
   dplyr::mutate(dplyr::across(contains("date"), ~as.Date(.x, format="%d.%m.%Y"))) -> gtl
 
 
-# as400 data clean
+# as400 data clean (This could be little different with the real raw data)
 colnames(as400_raw) <- as400_raw[1, ]
 as400_raw %>% 
   dplyr::slice(-1) %>% 
