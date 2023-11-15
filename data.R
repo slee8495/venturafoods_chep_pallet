@@ -1,0 +1,12 @@
+library(tidyverse)
+library(magrittr)
+library(openxlsx)
+library(readxl)
+library(writexl)
+library(skimr)
+library(janitor)
+library(lubridate)
+
+as400 <- read_excel("as400.xlsx")
+jde <- read_csv("jde.csv")
+chep <- read_csv("chep.csv")
