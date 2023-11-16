@@ -7,7 +7,7 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_excel("as400.xlsx")
+as400 <- read_csv("as400.csv")
 jde <- read_csv("jde.csv")
 chep <- read_csv("chep.csv")
 

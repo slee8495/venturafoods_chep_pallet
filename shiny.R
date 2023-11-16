@@ -27,7 +27,7 @@ ui <- navbarPage(
            sidebarLayout(
              sidebarPanel(
                fileInput("jde_file", "Upload JDE file (CSV format)", accept = c(".csv")),
-               fileInput("as400_file", "Upload AS400 file (XLSX format)", accept = c(".xlsx")),
+               fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
                fileInput("chep_file", "Upload CHEP file (CSV format)", accept = c(".csv"))
              ),
              mainPanel()
@@ -80,7 +80,7 @@ ui <- navbarPage(
 
 
 
-
+options(shiny.maxRequestSize = 50 * 1024^2)
 
 # Server logic
 server <- function(input, output, session) {
@@ -101,7 +101,7 @@ server <- function(input, output, session) {
   # AS400 File Processing
   observeEvent(input$as400_file, {
     req(input$as400_file)
-    as400_data <- read_excel(input$as400_file$datapath)
+    as400_data <- read_csv(input$as400_file$datapath)
     cleaned_as400_data(as400_cleaning(as400_data))
     output$as400_table <- renderDT({
       datatable(cleaned_as400_data(), extensions = "Buttons", options = DTOptions, rownames = FALSE)
