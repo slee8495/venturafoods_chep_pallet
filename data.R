@@ -23,11 +23,7 @@ as400 %>%
   dplyr::mutate(bill_of_lading = as.character(bill_of_lading)) %>% 
   dplyr::select(-loc_bol_number) %>% 
   dplyr::rename_with(~ paste0(., "_as400")) %>% 
-  dplyr::relocate(-plt_qty_as400) %>% 
-  rename("Ship Location (Legacy)" = ship_location_as400,
-         "Bill of Lading (Legacy)" = bill_of_lading_as400,
-         "Ship Date (Legacy)" = ship_date_as400,
-         "Plt Qty (Legacy)" = plt_qty_as400) -> as400_2
+  dplyr::relocate(-plt_qty_as400) -> as400_2
 
 ## jde data clean (create function)
 
@@ -47,13 +43,7 @@ jde_2 %>%
                 receipt_date = lubridate::mdy(receipt_date)) %>% 
   dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
   dplyr::rename_with(~ paste0(., "_jde")) %>% 
-  dplyr::relocate(-plt_qty_jde) %>% 
-  rename("Ship Location (JDE)" = ship_location_jde,
-         "Customer PO # (JDE)" = customer_po_number_jde,
-         "Actual Ship Date (JDE)" = actual_ship_date_jde,
-         "Receipt Date (JDE)" = receipt_date_jde,
-         "Ship or Receipt (JDE)" = ship_or_receipt_jde,
-         "Plt Qty (JDE)" = plt_qty_jde) -> jde_2
+  dplyr::relocate(-plt_qty_jde) -> jde_2
 
 
 ## chep data clean (create function)
@@ -86,14 +76,7 @@ chep_2 %>%
   dplyr::relocate(ship_location, sender_name, receipt_location, receiver_name, customer_po_number, bill_of_lading, plt_qty) %>% 
   dplyr::mutate(plt_qty = as.double(plt_qty)) %>% 
   dplyr::mutate(customer_po_number = as.character(customer_po_number)) %>% 
-  dplyr::rename_with(~ paste0(., "_chep")) %>% 
-  rename("Ship Location (CHEP)" = ship_location_chep,
-         "Sender Name (CHEP)" = sender_name_chep,
-         "Receipt Location (CHEP)" = receipt_location_chep,
-         "Receiver Name (CHEP)" = receiver_name_chep,
-         "Customer PO # (CHEP)" = customer_po_number_chep,
-         "Bill of Lading (CHEP)" = bill_of_lading_chep,
-         "Plt Qty (CHEP)" = plt_qty_chep) -> chep_2
+  dplyr::rename_with(~ paste0(., "_chep")) -> chep_2
 
 
 
