@@ -35,12 +35,22 @@ ui <- navbarPage(
   ),
   navbarMenu("Data Cleaning Automation",
              tabPanel("JDE", 
+                      selectInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
+                                  choices = c("All"), selected = "All", multiple = TRUE),
+                      selectInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
+                                  choices = c("All"), selected = "All"),
                       DTOutput("jde_table"),
                       downloadButton("download_jde", "Download JDE Data")),
              tabPanel("AS400", 
+                      selectInput("ship_location_as400_filter", "Filter by Ship Location (AS400)", 
+                                  choices = c("All"), selected = "All", multiple = TRUE),
                       DTOutput("as400_table"),
                       downloadButton("download_as400", "Download Legacy Data")),
              tabPanel("CHEP", 
+                      selectInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)", 
+                                  choices = c("All"), selected = "All", multiple = TRUE),
+                      selectInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)", 
+                                  choices = c("All"), selected = "All", multiple = TRUE),
                       DTOutput("chep_table"),
                       downloadButton("download_chep", "Download CHEP Data"))
   ),
@@ -93,8 +103,23 @@ server <- function(input, output, session) {
     req(input$jde_file)
     jde_data <- read_csv(input$jde_file$datapath)
     cleaned_jde_data(jde_cleaning(jde_data))
+    
+    # Update choices for ship location filter
+    updateSelectInput(session, "jde_ship_location_filter", 
+                      choices = c("All", unique(as.character(cleaned_jde_data()$ship_location_jde))))
+    
+    updateSelectInput(session, "ship_or_receipt_jde_filter", 
+                      choices = c("All", unique(as.character(cleaned_jde_data()$ship_or_receipt_jde))))
+    
     output$jde_table <- renderDT({
-      datatable(cleaned_jde_data(), extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      data <- cleaned_jde_data()
+      if (!"All" %in% input$jde_ship_location_filter) {
+        data <- data %>% filter(ship_location_jde %in% input$jde_ship_location_filter)
+      }
+      if (input$ship_or_receipt_jde_filter != "All") {
+        data <- data %>% filter(ship_or_receipt_jde == input$ship_or_receipt_jde_filter)
+      }
+      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
     })
   })
   
@@ -103,8 +128,17 @@ server <- function(input, output, session) {
     req(input$as400_file)
     as400_data <- read_csv(input$as400_file$datapath)
     cleaned_as400_data(as400_cleaning(as400_data))
+    
+    # Update choices for ship location filter
+    updateSelectInput(session, "ship_location_as400_filter", 
+                      choices = c("All", unique(as.character(cleaned_as400_data()$ship_location_as400))))
+    
     output$as400_table <- renderDT({
-      datatable(cleaned_as400_data(), extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      data <- cleaned_as400_data()
+      if (!"All" %in% input$ship_location_as400_filter) {
+        data <- data %>% filter(ship_location_as400 %in% input$ship_location_as400_filter)
+      }
+      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
     })
   })
   
@@ -113,8 +147,22 @@ server <- function(input, output, session) {
     req(input$chep_file)
     chep_data <- read_csv(input$chep_file$datapath)
     cleaned_chep_data(chep_cleaning(chep_data))
+    
+    # Update choices for CHEP filters
+    updateSelectInput(session, "ship_location_chep_filter", 
+                      choices = c("All", unique(as.character(cleaned_chep_data()$ship_location_chep))))
+    updateSelectInput(session, "receipt_location_chep_filter", 
+                      choices = c("All", unique(as.character(cleaned_chep_data()$receipt_location_chep))))
+    
     output$chep_table <- renderDT({
-      datatable(cleaned_chep_data(), extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      data <- cleaned_chep_data()
+      if (!"All" %in% input$ship_location_chep_filter) {
+        data <- data %>% filter(ship_location_chep %in% input$ship_location_chep_filter)
+      }
+      if (!"All" %in% input$receipt_location_chep_filter) {
+        data <- data %>% filter(receipt_location_chep %in% input$receipt_location_chep_filter)
+      }
+      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
     })
   })
   
