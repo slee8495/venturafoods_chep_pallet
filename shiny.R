@@ -125,7 +125,8 @@ server <- function(input, output, session) {
     
     # Update choices for ship or receipt filter (JDE)
     updatePickerInput(session, "ship_or_receipt_jde_filter", 
-                      choices = sort(unique(as.character(cleaned_jde_data()$ship_or_receipt_jde))))
+                      choices = c("All", sort(unique(as.character(cleaned_jde_data()$ship_or_receipt_jde)))),
+                      selected = "All")
     
     output$jde_table <- renderDT({
       data <- cleaned_jde_data()
