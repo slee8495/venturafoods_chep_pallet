@@ -35,22 +35,36 @@ ui <- navbarPage(
   ),
   navbarMenu("Data Cleaning Automation",
              tabPanel("JDE", 
-                      selectInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
-                                  choices = c("All"), selected = "All", multiple = TRUE),
-                      selectInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
-                                  choices = c("All"), selected = "All"),
+                      pickerInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE, 
+                                  options = list(`actions-box` = TRUE)),
+                      pickerInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
+                                  choices = c("All"), 
+                                  selected = "All",
+                                  options = list(`actions-box` = TRUE)),
                       DTOutput("jde_table"),
                       downloadButton("download_jde", "Download JDE Data")),
              tabPanel("AS400", 
-                      selectInput("ship_location_as400_filter", "Filter by Ship Location (AS400)", 
-                                  choices = c("All"), selected = "All", multiple = TRUE),
+                      pickerInput("ship_location_as400_filter", "Filter by Ship Location (AS400)", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE,
+                                  options = list(`actions-box` = TRUE)),
                       DTOutput("as400_table"),
                       downloadButton("download_as400", "Download Legacy Data")),
              tabPanel("CHEP", 
-                      selectInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)", 
-                                  choices = c("All"), selected = "All", multiple = TRUE),
-                      selectInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)", 
-                                  choices = c("All"), selected = "All", multiple = TRUE),
+                      pickerInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE,
+                                  options = list(`actions-box` = TRUE)),
+                      pickerInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE,
+                                  options = list(`actions-box` = TRUE)),
                       DTOutput("chep_table"),
                       downloadButton("download_chep", "Download CHEP Data"))
   ),
@@ -104,12 +118,14 @@ server <- function(input, output, session) {
     jde_data <- read_csv(input$jde_file$datapath)
     cleaned_jde_data(jde_cleaning(jde_data))
     
-    # Update choices for ship location filter
-    updateSelectInput(session, "jde_ship_location_filter", 
-                      choices = c("All", unique(as.character(cleaned_jde_data()$ship_location_jde))))
+    # Update choices for ship location filter (JDE)
+    updatePickerInput(session, "jde_ship_location_filter", 
+                      choices = sort(unique(as.factor(cleaned_jde_data()$ship_location_jde))),
+                      selected = unique(as.factor(cleaned_jde_data()$ship_location_jde)))
     
-    updateSelectInput(session, "ship_or_receipt_jde_filter", 
-                      choices = c("All", unique(as.character(cleaned_jde_data()$ship_or_receipt_jde))))
+    # Update choices for ship or receipt filter (JDE)
+    updatePickerInput(session, "ship_or_receipt_jde_filter", 
+                      choices = sort(unique(as.character(cleaned_jde_data()$ship_or_receipt_jde))))
     
     output$jde_table <- renderDT({
       data <- cleaned_jde_data()
@@ -130,8 +146,9 @@ server <- function(input, output, session) {
     cleaned_as400_data(as400_cleaning(as400_data))
     
     # Update choices for ship location filter
-    updateSelectInput(session, "ship_location_as400_filter", 
-                      choices = c("All", unique(as.character(cleaned_as400_data()$ship_location_as400))))
+    updatePickerInput(session, "ship_location_as400_filter", 
+                      choices = sort(unique(as.factor(cleaned_as400_data()$ship_location_as400))),
+                      selected = unique(as.factor(cleaned_as400_data()$ship_location_as400)))
     
     output$as400_table <- renderDT({
       data <- cleaned_as400_data()
@@ -148,11 +165,25 @@ server <- function(input, output, session) {
     chep_data <- read_csv(input$chep_file$datapath)
     cleaned_chep_data(chep_cleaning(chep_data))
     
+    # Unique, convert to numeric, sort, and then convert back to character for ship location
+    ship_location_sorted <- unique(cleaned_chep_data()$ship_location_chep)
+    ship_location_sorted <- sort(as.numeric(ship_location_sorted))
+    ship_location_sorted <- na.omit(ship_location_sorted) # Remove NA values if present
+    ship_location_sorted <- as.character(ship_location_sorted)
+    
+    # Unique, convert to numeric, sort, and then convert back to character for receipt location
+    receipt_location_sorted <- unique(cleaned_chep_data()$receipt_location_chep)
+    receipt_location_sorted <- sort(as.numeric(receipt_location_sorted))
+    receipt_location_sorted <- na.omit(receipt_location_sorted) # Remove NA values if present
+    receipt_location_sorted <- as.character(receipt_location_sorted)
+    
     # Update choices for CHEP filters
-    updateSelectInput(session, "ship_location_chep_filter", 
-                      choices = c("All", unique(as.character(cleaned_chep_data()$ship_location_chep))))
-    updateSelectInput(session, "receipt_location_chep_filter", 
-                      choices = c("All", unique(as.character(cleaned_chep_data()$receipt_location_chep))))
+    updatePickerInput(session, "ship_location_chep_filter", 
+                      choices = c(ship_location_sorted),
+                      selected = ship_location_sorted)
+    updatePickerInput(session, "receipt_location_chep_filter", 
+                      choices = c(receipt_location_sorted),
+                      selected = receipt_location_sorted)
     
     output$chep_table <- renderDT({
       data <- cleaned_chep_data()
