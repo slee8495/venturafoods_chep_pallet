@@ -5,6 +5,7 @@ library(DT)
 library(tidyverse)
 library(lubridate)
 library(readxl)
+library(shinyWidgets)
 
 # Source your functions file
 source("functions.R")
