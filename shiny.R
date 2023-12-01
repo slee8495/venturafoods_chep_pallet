@@ -136,7 +136,18 @@ server <- function(input, output, session) {
       if (input$ship_or_receipt_jde_filter != "All") {
         data <- data %>% filter(ship_or_receipt_jde == input$ship_or_receipt_jde_filter)
       }
-      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      style_table(datatable(data, 
+                            extensions = c("Buttons", "FixedHeader"), 
+                            options = list(pageLength = 100,
+                                           dom = "Blfrtip",
+                                           buttons = c("copy", "csv", "excel"),
+                                           scrollX = TRUE,
+                                           scrollY = "1500px",
+                                           fixedHeader = TRUE,
+                                           fixedColumns = list(leftColumns = 2)), 
+                            rownames = FALSE),
+                  c(plt_qty_jde = "lightblue",
+                    customer_po_number_jde = "lightgray"))
     })
   })
   
@@ -156,7 +167,18 @@ server <- function(input, output, session) {
       if (!"All" %in% input$ship_location_as400_filter) {
         data <- data %>% filter(ship_location_as400 %in% input$ship_location_as400_filter)
       }
-      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      style_table(datatable(data, 
+                            extensions = c("Buttons", "FixedHeader"), 
+                            options = list(pageLength = 100,
+                                           dom = "Blfrtip",
+                                           buttons = c("copy", "csv", "excel"),
+                                           scrollX = TRUE,
+                                           scrollY = "1500px",
+                                           fixedHeader = TRUE,
+                                           fixedColumns = list(leftColumns = 2)), 
+                            rownames = FALSE),
+                  c(plt_qty_as400 = "lightblue",
+                    bill_of_lading_as400 = "lightgray"))
     })
   })
   
@@ -194,7 +216,18 @@ server <- function(input, output, session) {
       if (!"All" %in% input$receipt_location_chep_filter) {
         data <- data %>% filter(receipt_location_chep %in% input$receipt_location_chep_filter)
       }
-      datatable(data, extensions = "Buttons", options = DTOptions, rownames = FALSE)
+      style_table(datatable(data, 
+                            extensions = c("Buttons", "FixedHeader"), 
+                            options = list(pageLength = 100,
+                                           dom = "Blfrtip",
+                                           buttons = c("copy", "csv", "excel"),
+                                           scrollX = TRUE,
+                                           scrollY = "1500px",
+                                           fixedHeader = TRUE,
+                                           fixedColumns = list(leftColumns = 2)), 
+                            rownames = FALSE),
+                  c(plt_qty_chep = "lightcoral",
+                    customer_po_number_chep = "lightgray"))
     })
   })
   
@@ -220,8 +253,21 @@ server <- function(input, output, session) {
     req(cleaned_chep_data(), cleaned_as400_data())
     data <- chep_as400_based_on_chep(cleaned_chep_data(), cleaned_as400_data())
     filtered_data <- filter_data(data, input$filter_chep_as400_based_on_chep)
-    style_table(datatable(filtered_data, extensions = "Buttons", options = DTOptions, rownames = FALSE), 
-                c("Plt Qty (CHEP)" = "lightcoral", "Plt Qty (Legacy)" = "lightblue", "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen"))
+    style_table(datatable(filtered_data, 
+                          extensions = c("Buttons", "FixedHeader"), 
+                          options = list(pageLength = 100,
+                                         dom = "Blfrtip",
+                                         buttons = c("copy", "csv", "excel"),
+                                         scrollX = TRUE,
+                                         scrollY = "1500px",
+                                         fixedHeader = TRUE,
+                                         fixedColumns = list(leftColumns = 2)), 
+                          rownames = FALSE),
+                c("Plt Qty (CHEP)" = "lightcoral", 
+                  "Plt Qty (Legacy)" = "lightblue", 
+                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen",
+                  "Bill of Lading (Legacy)" = "lightgray",
+                  "Bill of Lading (CHEP)" = "lightgray"))
   })
   
   # CHEP vs AS400 based on AS400 Data
@@ -229,8 +275,21 @@ server <- function(input, output, session) {
     req(cleaned_chep_data(), cleaned_as400_data())
     data <- chep_as400_based_on_as400(cleaned_as400_data(), cleaned_chep_data())
     filtered_data <- filter_data(data, input$filter_chep_as400_based_on_as400)
-    style_table(datatable(filtered_data, extensions = "Buttons", options = DTOptions, rownames = FALSE), 
-                c("Plt Qty (CHEP)" = "lightcoral", "Plt Qty (Legacy)" = "lightblue", "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen"))
+    style_table(datatable(filtered_data, 
+                          extensions = c("Buttons", "FixedHeader"), 
+                          options = list(pageLength = 100,
+                                         dom = "Blfrtip",
+                                         buttons = c("copy", "csv", "excel"),
+                                         scrollX = TRUE,
+                                         scrollY = "1500px",
+                                         fixedHeader = TRUE,
+                                         fixedColumns = list(leftColumns = 2)), 
+                          rownames = FALSE),
+                c("Plt Qty (CHEP)" = "lightcoral", 
+                  "Plt Qty (Legacy)" = "lightblue", 
+                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen",
+                  "Bill of Lading (Legacy)" = "lightgray",
+                  "Bill of Lading (CHEP)" = "lightgray"))
   })
   
   # CHEP vs JDE based on CHEP Data
@@ -238,8 +297,21 @@ server <- function(input, output, session) {
     req(cleaned_chep_data(), cleaned_jde_data())
     data <- chep_jde_based_on_chep(cleaned_chep_data(), cleaned_jde_data())
     filtered_data <- filter_data(data, input$filter_chep_jde_based_on_chep)
-    style_table(datatable(filtered_data, extensions = "Buttons", options = DTOptions, rownames = FALSE), 
-                c("Plt Qty (CHEP)" = "lightcoral", "Plt Qty (JDE)" = "lightblue", "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen"))
+    style_table(datatable(filtered_data, 
+                          extensions = c("Buttons", "FixedHeader"), 
+                          options = list(pageLength = 100,
+                                         dom = "Blfrtip",
+                                         buttons = c("copy", "csv", "excel"),
+                                         scrollX = TRUE,
+                                         scrollY = "1500px",
+                                         fixedHeader = TRUE,
+                                         fixedColumns = list(leftColumns = 2)), 
+                          rownames = FALSE),
+                c("Plt Qty (CHEP)" = "lightcoral", 
+                  "Plt Qty (JDE)" = "lightblue", 
+                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen",
+                  "Customer PO # (JDE)" = "lightgray",
+                  "Customer PO # (CHEP)" = "lightgray"))
   })
   
   # CHEP vs JDE based on JDE Data
@@ -247,10 +319,22 @@ server <- function(input, output, session) {
     req(cleaned_jde_data(), cleaned_chep_data())
     data <- chep_jde_based_on_jde(cleaned_jde_data(), cleaned_chep_data())
     filtered_data <- filter_data(data, input$filter_chep_jde_based_on_jde)
-    style_table(datatable(filtered_data, extensions = "Buttons", options = DTOptions, rownames = FALSE), 
-                c("Plt Qty (CHEP)" = "lightcoral", "Plt Qty (JDE)" = "lightblue", "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen"))
+    style_table(datatable(filtered_data, 
+                          extensions = c("Buttons", "FixedHeader"), 
+                          options = list(pageLength = 100,
+                                         dom = "Blfrtip",
+                                         buttons = c("copy", "csv", "excel"),
+                                         scrollX = TRUE,
+                                         scrollY = "1500px",
+                                         fixedHeader = TRUE,
+                                         fixedColumns = list(leftColumns = 2)), 
+                          rownames = FALSE),
+                c("Plt Qty (CHEP)" = "lightcoral", 
+                  "Plt Qty (JDE)" = "lightblue", 
+                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen",
+                  "Customer PO # (JDE)" = "lightgray",
+                  "Customer PO # (CHEP)" = "lightgray"))
   })
-  
   
   
   

@@ -32,16 +32,24 @@ jde_cleaning <- function(df) {
   colnames(df_2) <- df_2[1, ]
   
   df_2 %>%
-    clean_names() %>%
-    slice(-1) %>%
-    select(branch_plant, customer_po_number, na_4, actual_ship_date, receipt_date) %>%
-    rename(plt_qty = na_4,
-           ship_location = branch_plant) %>%
-    mutate(actual_ship_date = mdy(actual_ship_date),
-           receipt_date = mdy(receipt_date)) %>%
-    mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>%
-    rename_with(~ paste0(., "_jde")) %>% 
-    relocate(-plt_qty_jde)
+    janitor::clean_names() %>% 
+    dplyr::slice(-1) %>% 
+    mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
+    mutate(branch_plant = as.numeric(branch_plant)) %>%
+    
+    separate(number_number_of_pallets_actual_ship_date_receipt_date, c("a", "b", "c", "d", "e", "f"), sep = ",") %>% 
+    
+    dplyr::select(branch_plant, customer_po_number, b, c, d) %>% 
+    dplyr::rename(plt_qty = b,
+                  ship_location = branch_plant,
+                  actual_ship_date = c,
+                  receipt_date = d) %>% 
+    dplyr::mutate(actual_ship_date = lubridate::mdy(actual_ship_date),
+                  receipt_date = lubridate::mdy(receipt_date)) %>% 
+    dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
+    dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
+    dplyr::rename_with(~ paste0(., "_jde")) %>% 
+    dplyr::relocate(-plt_qty_jde)
 }
 
 # chep cleaning function
@@ -85,14 +93,14 @@ chep_cleaning <- function(df) {
 # comparing chep x as400 [based on chep]
 chep_as400_based_on_chep <- function(chep_df, as400_df) {
   chep_df %>%
-    data.frame() %>%  
-    left_join(as400_df %>% select(bill_of_lading_as400, ship_location_as400, plt_qty_as400), 
-              by = c("bill_of_lading_chep" = "bill_of_lading_as400")) %>%
-    mutate(plt_qty_as400 = ifelse(is.na(plt_qty_as400), 0, plt_qty_as400),
-           plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
-    mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>%
-    select(-customer_po_number_chep) %>%
-    mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
+    data.frame() %>% 
+    dplyr::left_join(as400_df %>% dplyr::select(bill_of_lading_as400, ship_location_as400, plt_qty_as400) %>% 
+                       mutate(bill_of_lading_as400_2 = bill_of_lading_as400), by = c("bill_of_lading_chep" = "bill_of_lading_as400_2")) %>% 
+    dplyr::mutate(plt_qty_as400 = ifelse(is.na(plt_qty_as400), 0, plt_qty_as400),
+                  plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
+    dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
+    dplyr::select(-customer_po_number_chep) %>% 
+    dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
     rename("Ship Location (CHEP)" = ship_location_chep,
            "Sender Name (CHEP)" = sender_name_chep,
            "Receipt Location (CHEP)" = receipt_location_chep,
@@ -101,7 +109,8 @@ chep_as400_based_on_chep <- function(chep_df, as400_df) {
            "Plt Qty (CHEP)" = plt_qty_chep,
            "Ship Location (Legacy)" = ship_location_as400,
            "Plt Qty (Legacy)" = plt_qty_as400,
-           "Plt Qty (CHEP) - Plt Qty (Legacy)" = plt_qty_chep_plt_qty_as400) 
+           "Plt Qty (CHEP) - Plt Qty (Legacy)" = plt_qty_chep_plt_qty_as400,
+           "Bill of Lading (Legacy)" = bill_of_lading_as400)
 }
 
 
@@ -109,11 +118,12 @@ chep_as400_based_on_chep <- function(chep_df, as400_df) {
 chep_as400_based_on_as400 <- function(as400_df, chep_df) {
   as400_df %>%
     data.frame() %>% 
-    left_join(chep_df, by = c("bill_of_lading_as400" = "bill_of_lading_chep")) %>%
-    mutate(plt_qty_as400 = ifelse(is.na(plt_qty_as400), 0, plt_qty_as400),
-           plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
-    mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>%
-    mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
+    dplyr::left_join(chep_df %>% 
+                       mutate(bill_of_lading_chep_2 = bill_of_lading_chep), by = c("bill_of_lading_as400" = "bill_of_lading_chep_2")) %>% 
+    dplyr::mutate(plt_qty_as400 = ifelse(is.na(plt_qty_as400), 0, plt_qty_as400),
+                  plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
+    dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
+    dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
     select(-customer_po_number_chep) %>% 
     rename("Ship Location (Legacy)" = ship_location_as400,
            "Bill of Lading (Legacy)" = bill_of_lading_as400,
@@ -124,20 +134,22 @@ chep_as400_based_on_as400 <- function(as400_df, chep_df) {
            "Receipt Location (CHEP)" = receipt_location_chep,
            "Receiver Name (CHEP)" = receiver_name_chep,
            "Plt Qty (CHEP)" = plt_qty_chep,
-           "Plt Qty (CHEP) - Plt Qty (Legacy)" = plt_qty_chep_plt_qty_as400) 
+           "Plt Qty (CHEP) - Plt Qty (Legacy)" = plt_qty_chep_plt_qty_as400,
+           "Bill of Lading (CHEP)" = bill_of_lading_chep)
 }
 
 
 # comparing chep x jde [based on chep]
 chep_jde_based_on_chep <- function(chep_df, jde_df) {
   chep_df %>%
-    data.frame() %>%  
-    left_join(jde_df, by = c("customer_po_number_chep" = "customer_po_number_jde")) %>%
-    mutate(plt_qty_jde = ifelse(is.na(plt_qty_jde), 0, plt_qty_jde),
-           plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
-    select(-bill_of_lading_chep) %>%
-    mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>%
-    mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
+    data.frame() %>%
+    dplyr::left_join(jde_df %>% 
+                       mutate(customer_po_number_jde_2 = customer_po_number_jde), by = c("customer_po_number_chep" = "customer_po_number_jde_2"), relationship = "many-to-many")  %>% 
+    dplyr::select(-bill_of_lading_chep) %>% 
+    dplyr::mutate(plt_qty_jde = ifelse(is.na(plt_qty_jde), 0, plt_qty_jde),
+                  plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
+    dplyr::mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>% 
+    dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
     rename("Ship Location (CHEP)" = ship_location_chep,
            "Sender Name (CHEP)" = sender_name_chep,
            "Receipt Location (CHEP)" = receipt_location_chep,
@@ -149,19 +161,22 @@ chep_jde_based_on_chep <- function(chep_df, jde_df) {
            "Receipt Date (JDE)" = receipt_date_jde,
            "Ship or Receipt (JDE)" = ship_or_receipt_jde,
            "Plt Qty (JDE)" = plt_qty_jde,
-           "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde)
+           "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde,
+           "Customer PO # (JDE)" = customer_po_number_jde)
 }
 
 
 # comparing chep x jde [based on jde]
 chep_jde_based_on_jde <- function(jde_df, chep_df) {
   jde_df %>%
-    data.frame() %>%  
-    left_join(chep_df, by = c("customer_po_number_jde" = "customer_po_number_chep")) %>%
-    mutate(plt_qty_jde = ifelse(is.na(plt_qty_jde), 0, plt_qty_jde),
-           plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
-    mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>%
-    mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
+    data.frame() %>% 
+    dplyr::left_join(chep_df %>% 
+                       mutate(customer_po_number_chep_2 = customer_po_number_chep), by = c("customer_po_number_jde" = "customer_po_number_chep_2"), relationship = "many-to-many") %>% 
+    dplyr::mutate(plt_qty_jde = ifelse(is.na(plt_qty_jde), 0, plt_qty_jde),
+                  plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
+    dplyr::relocate(-plt_qty_chep, -plt_qty_jde) %>% 
+    dplyr::mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>% 
+    dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
     select(-bill_of_lading_chep) %>% 
     rename("Ship Location (JDE)" = ship_location_jde,
            "Customer PO # (JDE)" = customer_po_number_jde,
@@ -174,7 +189,8 @@ chep_jde_based_on_jde <- function(jde_df, chep_df) {
            "Receipt Location (CHEP)" = receipt_location_chep,
            "Receiver Name (CHEP)" = receiver_name_chep,
            "Plt Qty (CHEP)" = plt_qty_chep,
-           "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde)
+           "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde,
+           "Customer PO # (CHEP)" = customer_po_number_chep)
 }
 
 
