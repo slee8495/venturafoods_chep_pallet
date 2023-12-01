@@ -99,6 +99,7 @@ chep_2 %>%
   dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
   dplyr::select(-customer_po_number_chep) %>% 
   dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
+  dplyr::filter(!is.na(ship_location_as400)) %>% 
   rename("Ship Location (CHEP)" = ship_location_chep,
          "Sender Name (CHEP)" = sender_name_chep,
          "Receipt Location (CHEP)" = receipt_location_chep,

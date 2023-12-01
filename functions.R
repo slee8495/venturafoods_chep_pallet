@@ -101,6 +101,7 @@ chep_as400_based_on_chep <- function(chep_df, as400_df) {
     dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
     dplyr::select(-customer_po_number_chep) %>% 
     dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
+    # dplyr::filter(!is.na(ship_location_as400)) %>%            ###### Watch Point ######
     rename("Ship Location (CHEP)" = ship_location_chep,
            "Sender Name (CHEP)" = sender_name_chep,
            "Receipt Location (CHEP)" = receipt_location_chep,
@@ -124,7 +125,8 @@ chep_as400_based_on_as400 <- function(as400_df, chep_df) {
                   plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
     dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
     dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
-    select(-customer_po_number_chep) %>% 
+    dplyr::select(-customer_po_number_chep) %>% 
+    # dplyr::filter(!is.na(bill_of_lading_chep)) %>%            ##### Watch Point #####
     rename("Ship Location (Legacy)" = ship_location_as400,
            "Bill of Lading (Legacy)" = bill_of_lading_as400,
            "Ship Date (Legacy)" = ship_date_as400,

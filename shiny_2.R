@@ -30,7 +30,7 @@ ui <- navbarPage(
              sidebarPanel(
                fileInput("jde_file", "Upload JDE file (CSV format)", accept = c(".csv")),
                fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
-               fileInput("chep_file", "Upload CHEP files (CSV format)", accept = c(".csv"), multiple = TRUE)
+               fileInput("chep_file", "Upload CHEP files (CSV format); **you can upload multiple files**", accept = c(".csv"), multiple = TRUE)
              ),
              mainPanel()
            )
@@ -86,11 +86,18 @@ ui <- navbarPage(
              tabPanel("CHEP vs JDE",
                       tabsetPanel(
                         tabPanel("Based on CHEP Data", 
-                                 selectInput("filter_chep_jde_based_on_chep", "Filter by Match:", choices = c("All", "Y", "N")),
+                                 fluidPage(
+                                   column(6, selectInput("filter_chep_jde_based_on_chep", "Filter by Match:", choices = c("All", "Y", "N"))),
+                                   column(6, selectInput("filter_ship_or_receipt_jde", "Filter by Ship or Receipt (JDE):", choices = c("All", "Ship", "Receipt")))
+                                 ),
+                                 
                                  DTOutput("chep_jde_based_on_chep_table"),
                                  downloadButton("download_compared_3", "Download")),
                         tabPanel("Based on JDE Data", 
-                                 selectInput("filter_chep_jde_based_on_jde", "Filter by Match:", choices = c("All", "Y", "N")),
+                                 fluidPage(
+                                     column(6, selectInput("filter_chep_jde_based_on_jde", "Filter by Match:", choices = c("All", "Y", "N"))),
+                                     column(6, selectInput("filter_ship_or_receipt_jde_2", "Filter by Ship or Receipt (JDE):", choices = c("All", "Ship", "Receipt")))
+                                   ),
                                  DTOutput("chep_jde_based_on_jde_table"),
                                  downloadButton("download_compared_4", "Download"))
                       )
@@ -304,6 +311,12 @@ server <- function(input, output, session) {
     req(cleaned_chep_data(), cleaned_jde_data())
     data <- chep_jde_based_on_chep(cleaned_chep_data(), cleaned_jde_data())
     filtered_data <- filter_data(data, input$filter_chep_jde_based_on_chep)
+    
+    # Apply additional filter for Ship or Receipt
+    if (input$filter_ship_or_receipt_jde != "All") {
+      filtered_data <- filtered_data %>% filter(`Ship or Receipt (JDE)` == input$filter_ship_or_receipt_jde)
+    }
+    
     style_table(datatable(filtered_data, 
                           extensions = c("Buttons", "FixedHeader"), 
                           options = list(pageLength = 100,
@@ -321,11 +334,21 @@ server <- function(input, output, session) {
                   "Customer PO # (CHEP)" = "lightgray"))
   })
   
+  
+  
+  
+  
   # CHEP vs JDE based on JDE Data
   output$chep_jde_based_on_jde_table <- renderDT({
     req(cleaned_jde_data(), cleaned_chep_data())
     data <- chep_jde_based_on_jde(cleaned_jde_data(), cleaned_chep_data())
     filtered_data <- filter_data(data, input$filter_chep_jde_based_on_jde)
+    
+    # Apply additional filter for Ship or Receipt
+    if (input$filter_ship_or_receipt_jde_2 != "All") {
+      filtered_data <- filtered_data %>% filter(`Ship or Receipt (JDE)` == input$filter_ship_or_receipt_jde_2)
+    }
+    
     style_table(datatable(filtered_data, 
                           extensions = c("Buttons", "FixedHeader"), 
                           options = list(pageLength = 100,
