@@ -30,7 +30,7 @@ ui <- navbarPage(
              sidebarPanel(
                fileInput("jde_file", "Upload JDE file (CSV format)", accept = c(".csv")),
                fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
-               fileInput("chep_file", "Upload CHEP file (CSV format)", accept = c(".csv"))
+               fileInput("chep_file", "Upload CHEP files (CSV format)", accept = c(".csv"), multiple = TRUE)
              ),
              mainPanel()
            )
@@ -187,8 +187,13 @@ server <- function(input, output, session) {
   # CHEP File Processing
   observeEvent(input$chep_file, {
     req(input$chep_file)
-    chep_data <- read_csv(input$chep_file$datapath)
-    cleaned_chep_data(chep_cleaning(chep_data))
+    files <- input$chep_file$datapath
+    
+    # Read and combine all files
+    combined_chep_data <- purrr::map_df(files, read_csv)
+    
+    # Clean and store the combined data
+    cleaned_chep_data(chep_cleaning(combined_chep_data))
     
     # Unique, convert to numeric, sort, and then convert back to character for ship location
     ship_location_sorted <- unique(cleaned_chep_data()$ship_location_chep)
