@@ -7,9 +7,9 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/EF454389.csv")
-jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/CHEP Sum. 11.30.23.csv")
-chep <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/chep/GTL.5018231913_20231007_6100788687_20231008_114453.csv")
+# as400 <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/EF454389.csv")
+# jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/CHEP Sum. 11.30.23.csv")
+# chep <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/chep/GTL.5018231913_20231007_6100788687_20231008_114453.csv")
 
 ## as400 data clean (create function)
 as400 %>% 
