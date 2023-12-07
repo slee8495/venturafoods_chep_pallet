@@ -28,7 +28,7 @@ ui <- navbarPage(
   tabPanel("Data Upload",
            sidebarLayout(
              sidebarPanel(
-               fileInput("jde_file", "Upload JDE file (CSV format)", accept = c(".csv")),
+               fileInput("jde_file", "Upload JDE file (CSV format); **only 1 location is allowed to upload**", accept = c(".csv")),
                fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
                fileInput("chep_file", "Upload CHEP files (CSV format); **you can upload multiple files**", accept = c(".csv"), multiple = TRUE)
              ),
@@ -37,25 +37,46 @@ ui <- navbarPage(
   ),
   navbarMenu("Data Cleaning Automation",
              tabPanel("JDE", 
-                      pickerInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
-                                  choices = c("All"), 
-                                  selected = "All", 
-                                  multiple = TRUE, 
-                                  options = list(`actions-box` = TRUE)),
-                      pickerInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
-                                  choices = c("All"), 
-                                  selected = "All",
-                                  options = list(`actions-box` = TRUE)),
+                      fluidRow(
+                        column(4, 
+                               dateRangeInput("date_range_jde", "Select Date Range:", start = Sys.Date() - 30, end = Sys.Date())
+                        ),
+                        column(4,
+                               pickerInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
+                                           choices = c("All"), 
+                                           selected = "All", 
+                                           multiple = TRUE, 
+                                           options = list(`actions-box` = TRUE)
+                               )
+                        ),
+                        column(4,
+                               pickerInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
+                                           choices = c("All"), 
+                                           selected = "All",
+                                           options = list(`actions-box` = TRUE)
+                               )
+                        )
+                      ),
                       DTOutput("jde_table"),
-                      downloadButton("download_jde", "Download JDE Data")),
+                      downloadButton("download_jde", "Download JDE Data")
+             ),
              tabPanel("AS400", 
-                      pickerInput("ship_location_as400_filter", "Filter by Ship Location (AS400)", 
-                                  choices = c("All"), 
-                                  selected = "All", 
-                                  multiple = TRUE,
-                                  options = list(`actions-box` = TRUE)),
+                      fluidRow(
+                        column(4, 
+                               dateRangeInput("date_range_as400", "Select Date Range:", start = Sys.Date() - 30, end = Sys.Date())
+                        ),
+                        column(4,
+                               pickerInput("ship_location_as400_filter", "Filter by Ship Location (AS400)", 
+                                           choices = c("All"), 
+                                           selected = "All", 
+                                           multiple = TRUE,
+                                           options = list(`actions-box` = TRUE)
+                               )
+                        )
+                      ),
                       DTOutput("as400_table"),
-                      downloadButton("download_as400", "Download Legacy Data")),
+                      downloadButton("download_as400", "Download Legacy Data")
+             ),
              tabPanel("CHEP", 
                       pickerInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)", 
                                   choices = c("All"), 
@@ -68,7 +89,8 @@ ui <- navbarPage(
                                   multiple = TRUE,
                                   options = list(`actions-box` = TRUE)),
                       DTOutput("chep_table"),
-                      downloadButton("download_chep", "Download CHEP Data"))
+                      downloadButton("download_chep", "Download CHEP Data")
+             )
   ),
   navbarMenu("CHEP x Ventura",
              tabPanel("CHEP vs AS400",
@@ -78,7 +100,14 @@ ui <- navbarPage(
                                  DTOutput("chep_as400_based_on_chep_table"),
                                  downloadButton("download_compared_1", "Download")),
                         tabPanel("Based on AS400 Data", 
-                                 selectInput("filter_chep_as400_based_on_as400", "Filter by Match:", choices = c("All", "Y", "N")),
+                                 fluidRow(
+                                   column(6, 
+                                          dateRangeInput("date_range_as400_data", "Select Date Range:", start = Sys.Date() - 30, end = Sys.Date())
+                                   ),
+                                   column(6, 
+                                          selectInput("filter_chep_as400_based_on_as400", "Filter by Match:", choices = c("All", "Y", "N"))
+                                   )
+                                 ),
                                  DTOutput("chep_as400_based_on_as400_table"),
                                  downloadButton("download_compared_2", "Download"))
                       )
@@ -90,11 +119,11 @@ ui <- navbarPage(
                                    column(6, selectInput("filter_chep_jde_based_on_chep", "Filter by Match:", choices = c("All", "Y", "N"))),
                                    column(6, selectInput("filter_ship_or_receipt_jde", "Filter by Ship or Receipt (JDE):", choices = c("All", "Ship", "Receipt")))
                                  ),
-                                 
                                  DTOutput("chep_jde_based_on_chep_table"),
                                  downloadButton("download_compared_3", "Download")),
                         tabPanel("Based on JDE Data", 
                                  fluidPage(
+                                   column(6, dateRangeInput("date_range_jde_data", "Select Date Range:", start = Sys.Date() - 30, end = Sys.Date())),
                                    column(6, selectInput("filter_chep_jde_based_on_jde", "Filter by Match:", choices = c("All", "Y", "N"))),
                                    column(6, selectInput("filter_ship_or_receipt_jde_2", "Filter by Ship or Receipt (JDE):", choices = c("All", "Ship", "Receipt")))
                                  ),
@@ -109,11 +138,8 @@ ui <- navbarPage(
   )
 )
 
-
-
-
-
 options(shiny.maxRequestSize = 50 * 1024^2)
+
 
 # Server logic
 server <- function(input, output, session) {
@@ -139,6 +165,9 @@ server <- function(input, output, session) {
     
     output$jde_table <- renderDT({
       data <- cleaned_jde_data()
+      if (!is.null(input$date_range_jde)) {
+        data <- data %>% filter(actual_ship_date_jde >= input$date_range_jde[1] & actual_ship_date_jde <= input$date_range_jde[2])
+      }
       if (!"All" %in% input$jde_ship_location_filter) {
         data <- data %>% filter(ship_location_jde %in% input$jde_ship_location_filter)
       }
@@ -173,6 +202,12 @@ server <- function(input, output, session) {
     
     output$as400_table <- renderDT({
       data <- cleaned_as400_data()
+      if (!is.null(input$date_range_as400)) {
+        data <- data %>% filter(ship_date_as400 >= input$date_range_as400[1] & ship_date_as400 <= input$date_range_as400[2])
+      }
+      if (!"All" %in% input$ship_location_as400_filter) {
+        data <- data %>% filter(ship_location_as400 %in% input$ship_location_as400_filter)
+      }
       if (!"All" %in% input$ship_location_as400_filter) {
         data <- data %>% filter(ship_location_as400 %in% input$ship_location_as400_filter)
       }
@@ -240,8 +275,9 @@ server <- function(input, output, session) {
                                            fixedHeader = TRUE,
                                            fixedColumns = list(leftColumns = 2)), 
                             rownames = FALSE),
-                  c(plt_qty_chep = "lightcoral",
-                    customer_po_number_chep = "lightgray"))
+                  c(plt_qty_chep = "lightgreen",
+                    customer_po_number_chep = "lightgray",
+                    bill_of_lading_chep = "lightgray"))
     })
   })
   
@@ -277,9 +313,9 @@ server <- function(input, output, session) {
                                          fixedHeader = TRUE,
                                          fixedColumns = list(leftColumns = 2)), 
                           rownames = FALSE),
-                c("Plt Qty (CHEP)" = "lightcoral", 
+                c("Plt Qty (CHEP)" = "lightgreen", 
                   "Plt Qty (Legacy)" = "lightblue", 
-                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen",
+                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightcoral",
                   "Bill of Lading (Legacy)" = "lightgray",
                   "Bill of Lading (CHEP)" = "lightgray"))
   })
@@ -288,6 +324,11 @@ server <- function(input, output, session) {
   output$chep_as400_based_on_as400_table <- renderDT({
     req(cleaned_chep_data(), cleaned_as400_data())
     data <- chep_as400_based_on_as400(cleaned_as400_data(), cleaned_chep_data())
+    
+    if (!is.null(input$date_range_as400_data)) {
+      data <- data %>% filter(`Ship Date (Legacy)` >= input$date_range_as400_data[1] & `Ship Date (Legacy)` <= input$date_range_as400_data[2])
+    }
+    
     filtered_data <- filter_data(data, input$filter_chep_as400_based_on_as400)
     style_table(datatable(filtered_data, 
                           extensions = c("Buttons", "FixedHeader"), 
@@ -299,9 +340,9 @@ server <- function(input, output, session) {
                                          fixedHeader = TRUE,
                                          fixedColumns = list(leftColumns = 2)), 
                           rownames = FALSE),
-                c("Plt Qty (CHEP)" = "lightcoral", 
+                c("Plt Qty (CHEP)" = "lightgreen", 
                   "Plt Qty (Legacy)" = "lightblue", 
-                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightgreen",
+                  "Plt Qty (CHEP) - Plt Qty (Legacy)" = "lightcoral",
                   "Bill of Lading (Legacy)" = "lightgray",
                   "Bill of Lading (CHEP)" = "lightgray"))
   })
@@ -327,9 +368,9 @@ server <- function(input, output, session) {
                                          fixedHeader = TRUE,
                                          fixedColumns = list(leftColumns = 2)), 
                           rownames = FALSE),
-                c("Plt Qty (CHEP)" = "lightcoral", 
+                c("Plt Qty (CHEP)" = "lightgreen", 
                   "Plt Qty (JDE)" = "lightblue", 
-                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen",
+                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightcoral",
                   "Customer PO # (JDE)" = "lightgray",
                   "Customer PO # (CHEP)" = "lightgray"))
   })
@@ -342,6 +383,11 @@ server <- function(input, output, session) {
   output$chep_jde_based_on_jde_table <- renderDT({
     req(cleaned_jde_data(), cleaned_chep_data())
     data <- chep_jde_based_on_jde(cleaned_jde_data(), cleaned_chep_data())
+    
+    if (!is.null(input$date_range_jde_data)) {
+      data <- data %>% filter(`Actual Ship Date (JDE)` >= input$date_range_jde_data[1] & `Actual Ship Date (JDE)` <= input$date_range_jde_data[2])
+    }
+    
     filtered_data <- filter_data(data, input$filter_chep_jde_based_on_jde)
     
     # Apply additional filter for Ship or Receipt
@@ -359,9 +405,9 @@ server <- function(input, output, session) {
                                          fixedHeader = TRUE,
                                          fixedColumns = list(leftColumns = 2)), 
                           rownames = FALSE),
-                c("Plt Qty (CHEP)" = "lightcoral", 
+                c("Plt Qty (CHEP)" = "lightgreen", 
                   "Plt Qty (JDE)" = "lightblue", 
-                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightgreen",
+                  "Plt Qty (CHEP) - Plt Qty (JDE)" = "lightcoral",
                   "Customer PO # (JDE)" = "lightgray",
                   "Customer PO # (CHEP)" = "lightgray"))
   })

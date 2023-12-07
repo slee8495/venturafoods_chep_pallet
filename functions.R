@@ -20,7 +20,13 @@ as400_cleaning <- function(df) {
            bill_of_lading = as.character(bill_of_lading)) %>%
     select(-loc_bol_number) %>%
     rename_with(~ paste0(., "_as400")) %>% 
-    relocate(-plt_qty_as400)
+    
+    # re-group
+    group_by(bill_of_lading_as400, ship_location_as400, ship_date_as400) %>% 
+    summarise(plt_qty_as400 = sum(plt_qty_as400)) %>% 
+    
+    
+    relocate(ship_location_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400)
 }
 
 # jde cleaning function
@@ -49,7 +55,14 @@ jde_cleaning <- function(df) {
     dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
     dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
     dplyr::rename_with(~ paste0(., "_jde")) %>% 
-    dplyr::relocate(-plt_qty_jde)
+    
+    # re-group
+    dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
+    dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
+    
+    dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde)
+    
+    
 }
 
 # chep cleaning function
@@ -86,7 +99,13 @@ chep_cleaning <- function(df) {
     relocate(ship_location, sender_name, receipt_location, receiver_name, customer_po_number, bill_of_lading, plt_qty) %>%
     mutate(plt_qty = as.double(plt_qty),
            customer_po_number = as.character(customer_po_number)) %>%
-    rename_with(~ paste0(., "_chep")) 
+    rename_with(~ paste0(., "_chep")) %>% 
+    
+    # re-group
+    group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
+    summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
+    relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep)
+    
 }
 
 
@@ -126,7 +145,6 @@ chep_as400_based_on_as400 <- function(as400_df, chep_df) {
     dplyr::mutate(plt_qty_chep_plt_qty_as400 = plt_qty_chep - plt_qty_as400) %>% 
     dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_as400 == 0, "Y", "N")) %>% 
     dplyr::select(-customer_po_number_chep) %>% 
-    # dplyr::filter(!is.na(bill_of_lading_chep)) %>%            ##### Watch Point #####
     rename("Ship Location (Legacy)" = ship_location_as400,
            "Bill of Lading (Legacy)" = bill_of_lading_as400,
            "Ship Date (Legacy)" = ship_date_as400,
