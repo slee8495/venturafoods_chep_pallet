@@ -8,21 +8,27 @@ library(janitor)
 library(lubridate)
 
 as400 <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/EF454389.csv")
-jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/CHEP Sum. 11.30.23.csv")
+jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/L60 CHEP Sum 12.07.23.csv")
 chep <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/chep/GTL.5018231913_20231007_6100788687_20231008_114453.csv")
 
 ## as400 data clean (create function)
 as400 %>% 
-  janitor::clean_names() %>% 
-  dplyr::slice(-1:-2) %>% 
-  dplyr::select(ship_location, bill_of_lading, loc_bol_number, chep, ship_date) %>% 
-  dplyr::rename(plt_qty = chep,
-                ship_location = ship_location) %>% 
-  dplyr::mutate(ship_date = lubridate::ymd(ship_date)) %>% 
-  dplyr::mutate(bill_of_lading = as.character(bill_of_lading)) %>% 
-  dplyr::select(-loc_bol_number) %>% 
-  dplyr::rename_with(~ paste0(., "_as400")) %>% 
-  dplyr::relocate(-plt_qty_as400) -> as400_2
+  clean_names() %>%
+  slice(-1:-2) %>%
+  select(ship_location, bill_of_lading, loc_bol_number, chep, ship_date) %>%
+  rename(plt_qty = chep,
+         ship_location = ship_location) %>%
+  mutate(ship_date = ymd(ship_date),
+         bill_of_lading = as.character(bill_of_lading)) %>%
+  select(-loc_bol_number) %>%
+  rename_with(~ paste0(., "_as400")) %>% 
+  
+  # re-group
+  group_by(bill_of_lading_as400, ship_location_as400, ship_date_as400) %>% 
+  summarise(plt_qty_as400 = sum(plt_qty_as400)) %>% 
+  
+  
+  relocate(ship_location_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400) -> as400_2
 
 ## jde data clean (create function)
 
@@ -37,20 +43,20 @@ jde_2 %>%
   dplyr::slice(-1) %>% 
   mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
   mutate(branch_plant = as.numeric(branch_plant)) %>%
-  
-  separate(number_number_of_pallets_actual_ship_date_receipt_date, c("a", "b", "c", "d", "e", "f"), sep = ",") %>% 
-  
-  dplyr::select(branch_plant, customer_po_number, b, c, d) %>% 
-  dplyr::rename(plt_qty = b,
-                ship_location = branch_plant,
-                actual_ship_date = c,
-                receipt_date = d) %>% 
+  dplyr::select(branch_plant, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
+  dplyr::rename(plt_qty = number_of_pallets,
+                ship_location = branch_plant) %>%
   dplyr::mutate(actual_ship_date = lubridate::mdy(actual_ship_date),
                 receipt_date = lubridate::mdy(receipt_date)) %>% 
   dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
   dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
   dplyr::rename_with(~ paste0(., "_jde")) %>% 
-  dplyr::relocate(-plt_qty_jde) -> jde_2
+  
+  # re-group
+  # dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
+  # dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
+  
+  dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) -> jde_2
 
 
 ## chep data clean (create function)
@@ -77,13 +83,18 @@ chep_2 %>%
                 receipt_location = ship_location) -> chep_3
 
 chep_2 %>% 
-  dplyr::left_join(chep_3) %>% 
-  dplyr::rename(customer_po_number = reference_3) %>% 
-  dplyr::select(-reference_2) %>% 
-  dplyr::relocate(ship_location, sender_name, receipt_location, receiver_name, customer_po_number, bill_of_lading, plt_qty) %>% 
-  dplyr::mutate(plt_qty = as.double(plt_qty)) %>% 
-  dplyr::mutate(customer_po_number = as.character(customer_po_number)) %>% 
-  dplyr::rename_with(~ paste0(., "_chep")) -> chep_2
+  left_join(chep_3) %>%
+  rename(customer_po_number = reference_3) %>%
+  select(-reference_2) %>%
+  relocate(ship_location, sender_name, receipt_location, receiver_name, customer_po_number, bill_of_lading, plt_qty) %>%
+  mutate(plt_qty = as.double(plt_qty),
+         customer_po_number = as.character(customer_po_number)) %>%
+  rename_with(~ paste0(., "_chep")) %>% 
+  
+  # re-group
+  group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
+  summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
+  relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) -> chep_2
 
 
 

@@ -42,14 +42,9 @@ jde_cleaning <- function(df) {
     dplyr::slice(-1) %>% 
     mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
     mutate(branch_plant = as.numeric(branch_plant)) %>%
-    
-    separate(number_number_of_pallets_actual_ship_date_receipt_date, c("a", "b", "c", "d", "e", "f"), sep = ",") %>% 
-    
-    dplyr::select(branch_plant, customer_po_number, b, c, d) %>% 
-    dplyr::rename(plt_qty = b,
-                  ship_location = branch_plant,
-                  actual_ship_date = c,
-                  receipt_date = d) %>% 
+    dplyr::select(branch_plant, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
+    dplyr::rename(plt_qty = number_of_pallets,
+                  ship_location = branch_plant) %>%
     dplyr::mutate(actual_ship_date = lubridate::mdy(actual_ship_date),
                   receipt_date = lubridate::mdy(receipt_date)) %>% 
     dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
