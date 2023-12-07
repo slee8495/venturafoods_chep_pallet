@@ -57,8 +57,8 @@ jde_cleaning <- function(df) {
     dplyr::rename_with(~ paste0(., "_jde")) %>% 
     
     # re-group
-    dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
-    dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
+    # dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
+    # dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
     
     dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde)
     

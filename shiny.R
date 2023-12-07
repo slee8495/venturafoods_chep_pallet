@@ -38,24 +38,18 @@ ui <- navbarPage(
   navbarMenu("Data Cleaning Automation",
              tabPanel("JDE", 
                       fluidRow(
-                        column(4, 
-                               dateRangeInput("date_range_jde", "Select Date Range:", start = Sys.Date() - 30, end = Sys.Date())
-                        ),
                         column(4,
                                pickerInput("jde_ship_location_filter", "Filter by Ship Location (JDE)", 
                                            choices = c("All"), 
                                            selected = "All", 
                                            multiple = TRUE, 
-                                           options = list(`actions-box` = TRUE)
-                               )
+                                           options = list(`actions-box` = TRUE))
                         ),
                         column(4,
                                pickerInput("ship_or_receipt_jde_filter", "Filter by Ship or Receipt (JDE)", 
                                            choices = c("All"), 
                                            selected = "All",
-                                           options = list(`actions-box` = TRUE)
-                               )
-                        )
+                                           options = list(`actions-box` = TRUE)))
                       ),
                       DTOutput("jde_table"),
                       downloadButton("download_jde", "Download JDE Data")
@@ -153,6 +147,7 @@ server <- function(input, output, session) {
     jde_data <- read_csv(input$jde_file$datapath)
     cleaned_jde_data(jde_cleaning(jde_data))
     
+    
     # Update choices for ship location filter (JDE)
     updatePickerInput(session, "jde_ship_location_filter", 
                       choices = sort(unique(as.factor(cleaned_jde_data()$ship_location_jde))),
@@ -165,12 +160,11 @@ server <- function(input, output, session) {
     
     output$jde_table <- renderDT({
       data <- cleaned_jde_data()
-      if (!is.null(input$date_range_jde)) {
-        data <- data %>% filter(actual_ship_date_jde >= input$date_range_jde[1] & actual_ship_date_jde <= input$date_range_jde[2])
-      }
+      
       if (!"All" %in% input$jde_ship_location_filter) {
         data <- data %>% filter(ship_location_jde %in% input$jde_ship_location_filter)
       }
+      
       if (input$ship_or_receipt_jde_filter != "All") {
         data <- data %>% filter(ship_or_receipt_jde == input$ship_or_receipt_jde_filter)
       }
