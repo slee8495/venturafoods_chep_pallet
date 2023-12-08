@@ -28,7 +28,7 @@ ui <- navbarPage(
   tabPanel("Data Upload",
            sidebarLayout(
              sidebarPanel(
-               fileInput("jde_file", "Upload JDE file (CSV format); **only 1 location is allowed to upload**", accept = c(".csv")),
+               fileInput("jde_file", "Upload JDE file (CSV format);", accept = c(".csv")),
                fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
                fileInput("chep_file", "Upload CHEP files (CSV format); **you can upload multiple files**", accept = c(".csv"), multiple = TRUE)
              ),
