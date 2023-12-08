@@ -127,7 +127,7 @@ chep_as400_based_on_chep <- function(chep_df, as400_df) {
            "Plt Qty (Legacy)" = plt_qty_as400,
            "Plt Qty (CHEP) - Plt Qty (Legacy)" = plt_qty_chep_plt_qty_as400,
            "Bill of Lading (Legacy)" = bill_of_lading_as400,
-           "Customer PO # (Legacy)" = order_number_as400)
+           "Legacy Order # (Legacy)" = order_number_as400)
 }
 
 
@@ -145,7 +145,7 @@ chep_as400_based_on_as400 <- function(as400_df, chep_df) {
            "Bill of Lading (Legacy)" = bill_of_lading_as400,
            "Ship Date (Legacy)" = ship_date_as400,
            "Plt Qty (Legacy)" = plt_qty_as400,
-           "Customer PO # (Legacy)" = order_number_as400,
+           "Legacy Order # (Legacy)" = order_number_as400,
            "Ship Location (CHEP)" = ship_location_chep,
            "Sender Name (CHEP)" = sender_name_chep,
            "Receipt Location (CHEP)" = receipt_location_chep,
