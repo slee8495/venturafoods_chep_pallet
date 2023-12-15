@@ -10,7 +10,6 @@ library(lubridate)
 as400 <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 AS400 12.14.23.csv")
 jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 CHEP Sum 12.14.23.csv")
 chep <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/chep/GTL.5018231913_20231007_6100788687_20231008_114453.csv")
-# chep_4th <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 GTL 12.10.23.csv")
 
 
 
