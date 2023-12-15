@@ -7,6 +7,16 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
+# Custom function to handle both date formats
+parse_as400_dates <- function(date_column) {
+
+  parsed_dates <- mdy(date_column, quiet = TRUE)
+
+  failed_indices <- which(is.na(parsed_dates))
+  parsed_dates[failed_indices] <- ymd(date_column[failed_indices], quiet = TRUE)
+  
+  return(parsed_dates)
+}
 
 # as400 cleaning function
 as400_cleaning <- function(df) {
@@ -14,20 +24,19 @@ as400_cleaning <- function(df) {
     clean_names() %>%
     slice(-1:-2) %>%
     select(ship_location, bill_of_lading, order_number, loc_bol_number, chep, ship_date) %>%
-    mutate(order_number = sub(".*-", "", order_number)) %>% 
-    rename(plt_qty = chep,
-           ship_location = ship_location) %>%
-    mutate(ship_date = ymd(ship_date),
+    mutate(order_number = str_remove(order_number, ".*-"), 
+           plt_qty = chep,
+           ship_location = ship_location,
+           ship_date = parse_as400_dates(ship_date),
            bill_of_lading = as.character(bill_of_lading)) %>%
     select(-loc_bol_number) %>%
-    rename_with(~ paste0(., "_as400")) %>% 
+    rename_with(~ paste0(., "_as400")) %>%
     
-    # re-group
+    # Re-group and summarize
     group_by(bill_of_lading_as400, ship_location_as400, ship_date_as400, order_number_as400) %>% 
-    summarise(plt_qty_as400 = sum(plt_qty_as400)) %>% 
+    summarise(plt_qty_as400 = sum(plt_qty_as400, na.rm = TRUE)) %>%
     
-    
-    relocate(ship_location_as400, order_number_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400) 
+    relocate(ship_location_as400, order_number_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400)
 }
 
 # jde cleaning function
@@ -60,6 +69,7 @@ jde_cleaning <- function(df) {
     
     
 }
+
 
 # chep cleaning function
 chep_cleaning <- function(df) {
