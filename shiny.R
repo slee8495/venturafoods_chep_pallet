@@ -28,8 +28,8 @@ ui <- navbarPage(
   tabPanel("Data Upload",
            sidebarLayout(
              sidebarPanel(
-               fileInput("jde_file", "Upload JDE file (CSV format);", accept = c(".csv")),
-               fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
+               fileInput("jde_file", "Upload JDE file (XLSX format);", accept = c(".xlsx")),
+               fileInput("as400_file", "Upload AS400 file (XLSX format)", accept = c(".xlsx")),
                fileInput("chep_file", "Upload CHEP files (XLSX format); **you can upload multiple files**", accept = c(".xlsx"), multiple = TRUE)
              ),
              mainPanel()
@@ -144,7 +144,7 @@ server <- function(input, output, session) {
   # JDE File Processing
   observeEvent(input$jde_file, {
     req(input$jde_file)
-    jde_data <- read_csv(input$jde_file$datapath)
+    jde_data <- read_xlsx(input$jde_file$datapath)
     cleaned_jde_data(jde_cleaning(jde_data))
     
     
@@ -186,7 +186,7 @@ server <- function(input, output, session) {
   # AS400 File Processing
   observeEvent(input$as400_file, {
     req(input$as400_file)
-    as400_data <- read_csv(input$as400_file$datapath)
+    as400_data <- read_xlsx(input$as400_file$datapath)
     cleaned_as400_data(as400_cleaning(as400_data))
     
     # Update choices for ship location filter
