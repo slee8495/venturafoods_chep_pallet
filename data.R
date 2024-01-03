@@ -9,7 +9,7 @@ library(lubridate)
 
 as400 <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 AS400 12.14.23.csv")
 jde <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 CHEP Sum 12.14.23.csv")
-chep <- read_csv("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/3rd sample/chep/GTL.5018231913_20231007_6100788687_20231008_114453.csv")
+chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/5th sample/L60 GTL 12.31.23.xlsx")
 
 
 
@@ -74,16 +74,13 @@ jde_2 %>%
 
 
 ## chep data clean (create function)
-chep %>% 
-  dplyr::slice(-1:-10) %>% 
+chep[-1:-13,] -> chep_1
+colnames(chep_1) <- chep_1[1, ]
+chep_1[-1, ] -> chep_1
+
+chep_1 %>% 
   janitor::clean_names() %>% 
-  dplyr::select(-1)  %>% 
-  dplyr::rename_with(~ "a", everything()[1]) %>%
-  dplyr::slice(-1) %>% 
-  tidyr::separate(a, c("product_code", "sender_global_id", "sender_external_code", "sender_name", "sender_town", "sender_country",
-                       "receiver_global_id", "receiver_external_code", "receiver_name", "receiver_town", "receiver_country", "plt_qty",
-                       "transaction_status", "reason_code", "reason_description", "reference_1", "reference_2", "reference_3",
-                       "date_of_notification", "movement_date", "pricing_date", "transaction_type", "corr_rev"), sep = ",") %>% 
+  dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
   dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
   dplyr::mutate(reference_2 = as.double(reference_2),
                 reference_3 = as.double(reference_3)) %>% 
@@ -161,7 +158,7 @@ as400_2 %>%
          "Customer PO # (CHEP)" = customer_po_number_chep) -> as400_chep
 
 
-  
+
 
 #### comparing chep x jde
 chep_2 %>% 
@@ -212,5 +209,3 @@ jde_2 %>%
          "Plt Qty (CHEP)" = plt_qty_chep,
          "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde,
          "Customer PO # (CHEP)" = customer_po_number_chep) -> jde_chep
-
-

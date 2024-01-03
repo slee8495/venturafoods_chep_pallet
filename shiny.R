@@ -30,7 +30,7 @@ ui <- navbarPage(
              sidebarPanel(
                fileInput("jde_file", "Upload JDE file (CSV format);", accept = c(".csv")),
                fileInput("as400_file", "Upload AS400 file (CSV format)", accept = c(".csv")),
-               fileInput("chep_file", "Upload CHEP files (CSV format); **you can upload multiple files**", accept = c(".csv"), multiple = TRUE)
+               fileInput("chep_file", "Upload CHEP files (XLSX format); **you can upload multiple files**", accept = c(".xlsx"), multiple = TRUE)
              ),
              mainPanel()
            )
@@ -226,7 +226,7 @@ server <- function(input, output, session) {
     files <- input$chep_file$datapath
     
     # Read and combine all files
-    combined_chep_data <- purrr::map_df(files, read_csv)
+    combined_chep_data <- purrr::map_df(files, ~read_excel(.x))
     
     # Clean and store the combined data
     cleaned_chep_data(chep_cleaning(combined_chep_data))

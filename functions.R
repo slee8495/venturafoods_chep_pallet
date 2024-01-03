@@ -9,9 +9,9 @@ library(lubridate)
 
 # Custom function to handle both date formats
 parse_as400_dates <- function(date_column) {
-
+  
   parsed_dates <- mdy(date_column, quiet = TRUE)
-
+  
   failed_indices <- which(is.na(parsed_dates))
   parsed_dates[failed_indices] <- ymd(date_column[failed_indices], quiet = TRUE)
   
@@ -41,7 +41,7 @@ as400_cleaning <- function(df) {
 
 # jde cleaning function
 jde_cleaning <- function(df) {
- 
+  
   df_2 <- df %>%
     clean_names() %>%
     slice(-1:-3)
@@ -66,39 +66,33 @@ jde_cleaning <- function(df) {
     dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
     
     dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde)
-    
-    
+  
+  
 }
 
 
 # chep cleaning function
 chep_cleaning <- function(df) {
-
-  chep_2 <- df %>%
-    slice(-1:-10) %>%
-    clean_names() %>%
-    select(-1) %>%
-    rename_with(~ "a", everything()[1]) %>%
-    slice(-1) %>%
-    separate(a, c("product_code", "sender_global_id", "sender_external_code", "sender_name", "sender_town", "sender_country",
-                  "receiver_global_id", "receiver_external_code", "receiver_name", "receiver_town", "receiver_country", "plt_qty",
-                  "transaction_status", "reason_code", "reason_description", "reference_1", "reference_2", "reference_3",
-                  "date_of_notification", "movement_date", "pricing_date", "transaction_type", "corr_rev"), sep = ",") %>%
-    select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>%
-    mutate(reference_2 = as.double(reference_2),
-           reference_3 = as.double(reference_3),
-           ship_location = str_sub(reference_2, 1, nchar(reference_2) - 5),
-           bill_of_lading = str_sub(reference_2, -5))
+  df <- df[-1:-13,]
+  colnames(df) <- df[1, ]
+  df <- df[-1, ]
   
-
-  chep_3 <- chep_2 %>%
-    select(sender_name, ship_location) %>%
-    unique() %>%
-    rename(receiver_name = sender_name,
-           receipt_location = ship_location)
+  df <- df %>% 
+    janitor::clean_names() %>%
+    dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
+    dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
+    dplyr::mutate(reference_2 = as.double(reference_2),
+                  reference_3 = as.double(reference_3)) %>% 
+    dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
+                  bill_of_lading = stringr::str_sub(reference_2, -5))
   
-
-  chep_2 <- chep_2 %>%
+  chep_3 <- df %>% 
+    dplyr::select(sender_name, ship_location) %>% 
+    unique() %>% 
+    dplyr::rename(receiver_name = sender_name,
+                  receipt_location = ship_location)
+  
+  df <- df %>% 
     left_join(chep_3) %>%
     rename(customer_po_number = reference_3) %>%
     select(-reference_2) %>%
@@ -106,12 +100,10 @@ chep_cleaning <- function(df) {
     mutate(plt_qty = as.double(plt_qty),
            customer_po_number = as.character(customer_po_number)) %>%
     rename_with(~ paste0(., "_chep")) %>% 
-    
-    # re-group
     group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
     summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
     relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep)
-    
+
 }
 
 
@@ -220,6 +212,3 @@ chep_jde_based_on_jde <- function(jde_df, chep_df) {
            "Plt Qty (CHEP) - Plt Qty (JDE)" = plt_qty_chep_plt_qty_jde,
            "Customer PO # (CHEP)" = customer_po_number_chep)
 }
-
-
-
