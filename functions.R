@@ -78,7 +78,7 @@ chep_cleaning <- function(df) {
   df <- df[-1, ]
   
   df <- df %>% 
-    janitor::clean_names() %>%
+    janitor::clean_names() %>% 
     dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
     dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
     dplyr::mutate(reference_2 = as.double(reference_2),
@@ -100,9 +100,12 @@ chep_cleaning <- function(df) {
     mutate(plt_qty = as.double(plt_qty),
            customer_po_number = as.character(customer_po_number)) %>%
     rename_with(~ paste0(., "_chep")) %>% 
+    
+    # re-group
     group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
     summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
-    relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep)
+    relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
+    dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), "0", receipt_location_chep)) 
 
 }
 

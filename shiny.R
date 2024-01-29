@@ -240,7 +240,6 @@ server <- function(input, output, session) {
     # Unique, convert to numeric, sort, and then convert back to character for receipt location
     receipt_location_sorted <- unique(cleaned_chep_data()$receipt_location_chep)
     receipt_location_sorted <- sort(as.numeric(receipt_location_sorted))
-    receipt_location_sorted <- na.omit(receipt_location_sorted) # Remove NA values if present
     receipt_location_sorted <- as.character(receipt_location_sorted)
     
     # Update choices for CHEP filters

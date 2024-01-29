@@ -7,9 +7,9 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 AS400 12.14.23.xlsx")
-jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/4th sample/L60 CHEP Sum 12.14.23.xlsx")
-chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/5th sample/L60 GTL 12.31.23.xlsx")
+as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/as400.xlsx")
+jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/jde.xlsx")
+chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/chep.xlsx")
 
 
 
@@ -105,7 +105,8 @@ chep_2 %>%
   # re-group
   group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
   summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
-  relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) -> chep_2
+  relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
+  dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), "0", receipt_location_chep)) -> chep_2
 
 
 
