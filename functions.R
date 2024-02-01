@@ -55,9 +55,11 @@ jde_cleaning <- function(df) {
     dplyr::select(branch_plant, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
     dplyr::rename(plt_qty = number_of_pallets,
                   ship_location = branch_plant) %>%
-    dplyr::mutate(actual_ship_date = lubridate::mdy(actual_ship_date),
-                  receipt_date = lubridate::mdy(receipt_date)) %>% 
-    dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
+    dplyr::mutate(actual_ship_date = as.numeric(actual_ship_date),
+                  receipt_date = as.numeric(receipt_date)) %>%
+    dplyr::mutate(actual_ship_date = as_date(actual_ship_date, origin = "1899-12-30"),
+                  receipt_date = as_date(receipt_date, origin = "1899-12-30")) %>%
+    dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>%
     dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
     dplyr::rename_with(~ paste0(., "_jde")) %>% 
     

@@ -7,9 +7,9 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/as400.xlsx")
-jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/jde.xlsx")
-chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/7th sample/chep.xlsx")
+as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/8th sample/as400.xlsx")
+jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/8th sample/jde.xlsx")
+chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/8th sample/GTL 010724.xlsx")
 
 
 
@@ -60,9 +60,11 @@ jde_2 %>%
   dplyr::select(branch_plant, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
   dplyr::rename(plt_qty = number_of_pallets,
                 ship_location = branch_plant) %>%
-  dplyr::mutate(actual_ship_date = lubridate::mdy(actual_ship_date),
-                receipt_date = lubridate::mdy(receipt_date)) %>% 
-  dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>% 
+  dplyr::mutate(actual_ship_date = as.numeric(actual_ship_date),
+                receipt_date = as.numeric(receipt_date)) %>%
+  dplyr::mutate(actual_ship_date = as_date(actual_ship_date, origin = "1899-12-30"),
+                receipt_date = as_date(receipt_date, origin = "1899-12-30")) %>%
+  dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>%
   dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
   dplyr::rename_with(~ paste0(., "_jde")) %>% 
   
