@@ -7,11 +7,11 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/8th sample/as400.xlsx")
-jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/8th sample/jde.xlsx")
-chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/9th sample/chep.xlsx")
+as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/as400.xlsx")
+jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/jde.xlsx")
+chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/GTL 020424.xlsx")
 
-
+df <- chep
 
 ## as400 data clean (create function)
 parse_as400_dates <- function(date_column) {
@@ -93,7 +93,8 @@ chep_2 %>%
   dplyr::select(sender_name, ship_location) %>% 
   unique() %>% 
   dplyr::rename(receiver_name = sender_name,
-                receipt_location = ship_location) -> chep_3
+                receipt_location = ship_location) %>% 
+  dplyr::mutate(receipt_location = as.numeric(receipt_location)) -> chep_3
 
 chep_2 %>% 
   left_join(chep_3) %>%
@@ -108,7 +109,7 @@ chep_2 %>%
   group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
   summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
   relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
-  dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), "0", receipt_location_chep)) -> chep_2
+  dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep)) -> chep_2
 
 
 

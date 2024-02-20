@@ -92,7 +92,8 @@ chep_cleaning <- function(df) {
     dplyr::select(sender_name, ship_location) %>% 
     unique() %>% 
     dplyr::rename(receiver_name = sender_name,
-                  receipt_location = ship_location)
+                  receipt_location = ship_location) %>% 
+    dplyr::mutate(receipt_location = as.numeric(receipt_location)) 
   
   df <- df %>% 
     left_join(chep_3) %>%
@@ -107,7 +108,7 @@ chep_cleaning <- function(df) {
     group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
     summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
     relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
-    dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), "0", receipt_location_chep)) 
+    dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep)) 
 
 }
 
