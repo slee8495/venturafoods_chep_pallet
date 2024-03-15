@@ -72,16 +72,6 @@ ui <- navbarPage(
                       downloadButton("download_as400", "Download Legacy Data")
              ),
              tabPanel("CHEP",
-                      pickerInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)",
-                                  choices = c("All"),
-                                  selected = "All",
-                                  multiple = TRUE,
-                                  options = list(`actions-box` = TRUE)),
-                      pickerInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)",
-                                  choices = c("All"),
-                                  selected = "All",
-                                  multiple = TRUE,
-                                  options = list(`actions-box` = TRUE)),
                       DTOutput("chep_table"),
                       downloadButton("download_chep", "Download CHEP Data")
              )
@@ -140,6 +130,7 @@ server <- function(input, output, session) {
   cleaned_jde_data <- reactiveVal()
   cleaned_as400_data <- reactiveVal()
   cleaned_chep_data <- reactiveVal()
+  cleaned_chep_data_2 <- reactiveVal()
   
   # JDE File Processing
   observeEvent(input$jde_file, {
@@ -227,40 +218,23 @@ server <- function(input, output, session) {
     
     # Read and combine all files
     combined_chep_data <- purrr::map_df(files, ~read_excel(.x))
+    combined_chep_data_2 <- purrr::map_df(files, ~read_excel(.x))
     
     # Create chep_ref data
-    chep_reference_data <- chep_ref(combined_chep_data)
+    chep_reference_data <- chep_ref(combined_chep_data_2)
     
     # Clean and store the combined data
     cleaned_chep_data(chep_cleaning(combined_chep_data, chep_reference_data))
     
-    # Unique, convert to numeric, sort, and then convert back to character for ship location
-    ship_location_sorted <- unique(cleaned_chep_data()$ship_location_chep)
-    ship_location_sorted <- sort(as.numeric(ship_location_sorted))
-    ship_location_sorted <- na.omit(ship_location_sorted) # Remove NA values if present
-    ship_location_sorted <- as.character(ship_location_sorted)
     
-    # Unique, convert to numeric, sort, and then convert back to character for receipt location
-    receipt_location_sorted <- unique(cleaned_chep_data()$receipt_location_chep)
-    receipt_location_sorted <- sort(as.numeric(receipt_location_sorted))
-    receipt_location_sorted <- as.character(receipt_location_sorted)
+    # Clean and store the combined data
+    cleaned_chep_data_2(chep_cleaning_2(combined_chep_data_2))
     
-    # Update choices for CHEP filters
-    updatePickerInput(session, "ship_location_chep_filter", 
-                      choices = c(ship_location_sorted),
-                      selected = ship_location_sorted)
-    updatePickerInput(session, "receipt_location_chep_filter", 
-                      choices = c(receipt_location_sorted),
-                      selected = receipt_location_sorted)
+    
     
     output$chep_table <- renderDT({
-      data <- cleaned_chep_data()
-      if (!"All" %in% input$ship_location_chep_filter) {
-        data <- data %>% filter(ship_location_chep %in% input$ship_location_chep_filter)
-      }
-      if (!"All" %in% input$receipt_location_chep_filter) {
-        data <- data %>% filter(receipt_location_chep %in% input$receipt_location_chep_filter)
-      }
+      data <- cleaned_chep_data_2()
+      
       style_table(datatable(data, 
                             extensions = c("Buttons", "FixedHeader"), 
                             options = list(pageLength = 100,

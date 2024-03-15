@@ -105,20 +105,18 @@ chep_ref <- function(chep) {
 
 # chep cleaning function
 chep_cleaning <- function(chep, chep_ref) {
-  chep[-1:-13,] -> chep_1
-  colnames(chep_1) <- chep_1[1, ]
-  chep_1[-1, ] -> chep_1
+  chep[-1:-13,] -> df
+  colnames(df) <- df[1, ]
+  df[-1, ] -> df
   
-  chep_1 %>% 
+  df %>% 
     janitor::clean_names() %>% 
     dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
     dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
     dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
     dplyr::mutate(reference_3 = ifelse(is.na(reference_3), as.numeric(gsub("\\D", "", reference_2)), reference_3)) %>% 
     dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
-                  bill_of_lading = stringr::str_sub(reference_2, -5)) -> chep_2
-  
-  chep_2 %>% 
+                  bill_of_lading = stringr::str_sub(reference_2, -5)) %>% 
     left_join(chep_ref) %>%
     rename(customer_po_number = reference_3) %>%
     select(-reference_2) %>%
@@ -136,10 +134,49 @@ chep_cleaning <- function(chep, chep_ref) {
     dplyr::mutate(bill_of_lading_chep = paste0(ship_location_chep, bill_of_lading_chep)) %>% 
     
     relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
-    dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep))  -> chep_2
+    dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep))  -> df
   
-  return(chep_2)
+  return(df)
 }
+
+
+
+chep_cleaning_2 <- function(chep) {
+  chep[-1:-13,] -> df
+  colnames(df) <- df[1, ]
+  df[-1, ] -> df
+  
+  df %>% 
+    janitor::clean_names() %>% 
+    dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
+    dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
+    dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
+    dplyr::mutate(reference_3 = ifelse(is.na(reference_3), as.numeric(gsub("\\D", "", reference_2)), reference_3)) %>% 
+    dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
+                  bill_of_lading = stringr::str_sub(reference_2, -5)) %>% 
+    rename(customer_po_number = reference_3) %>%
+    select(-reference_2) %>%
+    relocate(ship_location, sender_name, customer_po_number, bill_of_lading, plt_qty) %>%
+    mutate(plt_qty = as.double(plt_qty),
+           customer_po_number = as.character(customer_po_number)) %>%
+    rename_with(~ paste0(., "_chep")) %>% 
+    
+    # re-group
+    group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep) %>% 
+    summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
+    
+    dplyr::mutate(ship_location_chep = str_pad(ship_location_chep, width = 3, pad = "0"),
+                  bill_of_lading_chep = str_pad(bill_of_lading_chep, width = 5, pad = "0")) %>% 
+    dplyr::mutate(bill_of_lading_chep = paste0(ship_location_chep, bill_of_lading_chep)) %>% 
+    
+    dplyr::mutate(ship_location_chep = as.double(ship_location_chep)) %>% 
+    
+    relocate(ship_location_chep, sender_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep)  -> df
+  
+  return(df)
+}
+
+
 
 
 
