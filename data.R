@@ -7,7 +7,7 @@ library(skimr)
 library(janitor)
 library(lubridate)
 
-as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/as400.xlsx")
+as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/AS400 021824.xlsx")
 jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/jde.xlsx")
 chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/GTL 020424.xlsx")
 
@@ -42,7 +42,11 @@ as400 %>%
   group_by(bill_of_lading_as400, ship_location_as400, ship_date_as400, order_number_as400) %>% 
   summarise(plt_qty_as400 = sum(plt_qty_as400, na.rm = TRUE)) %>%
   
-  relocate(ship_location_as400, order_number_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400)-> as400_2
+  dplyr::mutate(ship_location_as400 = str_pad(ship_location_as400, width = 3, pad = "0"),
+                bill_of_lading_as400 = str_pad(bill_of_lading_as400, width = 5, pad = "0")) %>% 
+  dplyr::mutate(bill_of_lading_as400 = paste0(ship_location_as400, bill_of_lading_as400)) %>% 
+  
+  relocate(ship_location_as400, order_number_as400, bill_of_lading_as400, ship_date_as400, plt_qty_as400) -> as400_2
 
 ## jde data clean (create function)
 
@@ -108,6 +112,12 @@ chep_2 %>%
   # re-group
   group_by(customer_po_number_chep, bill_of_lading_chep, ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep) %>% 
   summarise(plt_qty_chep = sum(plt_qty_chep)) %>% 
+  
+  dplyr::mutate(ship_location_chep = str_pad(ship_location_chep, width = 3, pad = "0"),
+                bill_of_lading_chep = str_pad(bill_of_lading_chep, width = 5, pad = "0")) %>% 
+  dplyr::mutate(bill_of_lading_chep = paste0(ship_location_chep, bill_of_lading_chep)) %>% 
+  
+  
   relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
   dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep)) -> chep_2
 
