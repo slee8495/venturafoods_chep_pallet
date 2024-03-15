@@ -8,8 +8,8 @@ library(janitor)
 library(lubridate)
 
 as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/AS400 021824.xlsx")
-jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/jde.xlsx")
-chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/GTL 020424.xlsx")
+jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/11th sample/jde.xlsx")
+chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/11th sample/chep.xlsx")
 
 df <- chep
 
@@ -79,6 +79,33 @@ jde_2 %>%
   dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) -> jde_2
 
 
+
+
+############## chep_ref ##############
+chep[-1:-13,] -> chep_ref
+colnames(chep_ref) <- chep_ref[1, ]
+chep_ref[-1, ] -> chep_ref
+
+chep_ref %>% 
+  janitor::clean_names() %>% 
+  dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
+  dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
+  dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
+  dplyr::mutate(reference_3 = ifelse(is.na(reference_3), as.numeric(gsub("\\D", "", reference_2)), reference_3)) %>% 
+  dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
+                bill_of_lading = stringr::str_sub(reference_2, -5)) -> chep_ref
+
+
+chep_ref %>% 
+  dplyr::select(sender_name, ship_location) %>% 
+  unique() %>% 
+  dplyr::rename(receiver_name = sender_name,
+                receipt_location = ship_location) %>% 
+  dplyr::mutate(receipt_location = as.numeric(receipt_location)) -> chep_ref
+
+#############################################################################
+
+
 ## chep data clean (create function)
 chep[-1:-13,] -> chep_1
 colnames(chep_1) <- chep_1[1, ]
@@ -93,15 +120,12 @@ chep_1 %>%
   dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
                 bill_of_lading = stringr::str_sub(reference_2, -5)) -> chep_2
 
-chep_2 %>% 
-  dplyr::select(sender_name, ship_location) %>% 
-  unique() %>% 
-  dplyr::rename(receiver_name = sender_name,
-                receipt_location = ship_location) %>% 
-  dplyr::mutate(receipt_location = as.numeric(receipt_location)) -> chep_3
+
+
+
 
 chep_2 %>% 
-  left_join(chep_3) %>%
+  left_join(chep_ref) %>%
   rename(customer_po_number = reference_3) %>%
   select(-reference_2) %>%
   relocate(ship_location, sender_name, receipt_location, receiver_name, customer_po_number, bill_of_lading, plt_qty) %>%
@@ -119,7 +143,7 @@ chep_2 %>%
   
   
   relocate(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep, bill_of_lading_chep, plt_qty_chep) %>% 
-  dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep)) -> chep_2
+  dplyr::mutate(receipt_location_chep = ifelse(is.na(receipt_location_chep), 0, receipt_location_chep))  -> chep_2
 
 
 

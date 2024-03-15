@@ -71,15 +71,15 @@ ui <- navbarPage(
                       DTOutput("as400_table"),
                       downloadButton("download_as400", "Download Legacy Data")
              ),
-             tabPanel("CHEP", 
-                      pickerInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)", 
-                                  choices = c("All"), 
-                                  selected = "All", 
+             tabPanel("CHEP",
+                      pickerInput("ship_location_chep_filter", "Filter by Ship Location (CHEP)",
+                                  choices = c("All"),
+                                  selected = "All",
                                   multiple = TRUE,
                                   options = list(`actions-box` = TRUE)),
-                      pickerInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)", 
-                                  choices = c("All"), 
-                                  selected = "All", 
+                      pickerInput("receipt_location_chep_filter", "Filter by Receipt Location (CHEP)",
+                                  choices = c("All"),
+                                  selected = "All",
                                   multiple = TRUE,
                                   options = list(`actions-box` = TRUE)),
                       DTOutput("chep_table"),
@@ -228,8 +228,11 @@ server <- function(input, output, session) {
     # Read and combine all files
     combined_chep_data <- purrr::map_df(files, ~read_excel(.x))
     
+    # Create chep_ref data
+    chep_reference_data <- chep_ref(combined_chep_data)
+    
     # Clean and store the combined data
-    cleaned_chep_data(chep_cleaning(combined_chep_data))
+    cleaned_chep_data(chep_cleaning(combined_chep_data, chep_reference_data))
     
     # Unique, convert to numeric, sort, and then convert back to character for ship location
     ship_location_sorted <- unique(cleaned_chep_data()$ship_location_chep)
