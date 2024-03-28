@@ -90,7 +90,7 @@ chep_ref %>%
   janitor::clean_names() %>% 
   dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
   dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
-  dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
+  # dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
   dplyr::mutate(reference_3 = ifelse(is.na(reference_3), as.numeric(gsub("\\D", "", reference_2)), reference_3)) %>% 
   dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
                 bill_of_lading = stringr::str_sub(reference_2, -5)) -> chep_ref
@@ -115,7 +115,7 @@ chep_1 %>%
   janitor::clean_names() %>% 
   dplyr::rename(plt_qty = quantity, reference_2 = reference2, reference_3 = reference3) %>%
   dplyr::select(sender_name, receiver_name, plt_qty, reference_2, reference_3) %>% 
-  dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
+  # dplyr::mutate(reference_3 =  as.numeric(gsub("\\D", "", reference_3))) %>% 
   dplyr::mutate(reference_3 = ifelse(is.na(reference_3), as.numeric(gsub("\\D", "", reference_2)), reference_3)) %>% 
   dplyr::mutate(ship_location = stringr::str_sub(reference_2, 1, nchar(reference_2) -5),
                 bill_of_lading = stringr::str_sub(reference_2, -5)) -> chep_2
