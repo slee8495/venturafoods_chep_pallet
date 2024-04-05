@@ -49,6 +49,7 @@ jde_cleaning <- function(df) {
   df_2 <- df %>%
     clean_names() %>%
     slice(-1:-3)
+  
   colnames(df_2) <- df_2[1, ]
   
   df_2 %>%
@@ -56,7 +57,7 @@ jde_cleaning <- function(df) {
     dplyr::slice(-1) %>% 
     mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
     mutate(branch_plant = as.numeric(branch_plant)) %>%
-    dplyr::select(branch_plant, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
+    dplyr::select(branch_plant, jde_order_number, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
     dplyr::rename(plt_qty = number_of_pallets,
                   ship_location = branch_plant) %>%
     dplyr::mutate(actual_ship_date = as.numeric(actual_ship_date),
@@ -66,6 +67,8 @@ jde_cleaning <- function(df) {
     dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>%
     dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
     dplyr::rename_with(~ paste0(., "_jde")) %>% 
+    dplyr::mutate(customer_po_number_jde = ifelse(is.na(customer_po_number_jde), jde_order_number_jde, customer_po_number_jde)) %>%
+    dplyr::select(-jde_order_number_jde) %>% 
     
     # re-group
     dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
