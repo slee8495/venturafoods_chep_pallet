@@ -72,13 +72,14 @@ jde_2 %>%
   dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
   dplyr::rename_with(~ paste0(., "_jde")) %>% 
   dplyr::mutate(customer_po_number_jde = ifelse(is.na(customer_po_number_jde), jde_order_number_jde, customer_po_number_jde)) %>%
-  dplyr::select(-jde_order_number_jde) %>%
+  dplyr::select(-jde_order_number_jde) %>% 
   
   # re-group
   dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
-  dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
+  dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>% 
   
-  dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) -> jde_2
+  dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) %>% 
+  dplyr::filter(!is.na(plt_qty_jde)) -> jde_2
 
 
 
@@ -234,13 +235,14 @@ chep_2 %>%
   dplyr::group_by(ship_location_chep, sender_name_chep, receipt_location_chep, receiver_name_chep, customer_po_number_chep) %>% 
   dplyr::summarise(plt_qty_chep = sum(plt_qty_chep)) %>%
   
-  dplyr::left_join(jde_df %>% 
-                     mutate(customer_po_number_jde_2 = customer_po_number_jde), by = c("customer_po_number_chep" = "customer_po_number_jde_2"), relationship = "many-to-many")  %>% 
+  dplyr::left_join(jde_2 %>% 
+                     mutate(customer_po_number_jde_2 = customer_po_number_jde), by = c("customer_po_number_chep" = "customer_po_number_jde_2"), relationship = "many-to-many") %>% 
   
   dplyr::mutate(plt_qty_jde = ifelse(is.na(plt_qty_jde), 0, plt_qty_jde),
                 plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
   dplyr::mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>% 
   dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
+  dplyr::filter(ship_or_receipt_jde != "Receipt") %>% 
   rename("Ship Location (CHEP)" = ship_location_chep,
          "Sender Name (CHEP)" = sender_name_chep,
          "Receipt Location (CHEP)" = receipt_location_chep,

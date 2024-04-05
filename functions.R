@@ -74,7 +74,8 @@ jde_cleaning <- function(df) {
     dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
     dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
     
-    dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde)
+    dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) %>% 
+    dplyr::filter(!is.na(plt_qty_jde)) 
   
   
 }
@@ -253,6 +254,7 @@ chep_jde_based_on_chep <- function(chep_df, jde_df) {
                   plt_qty_chep = ifelse(is.na(plt_qty_chep), 0, plt_qty_chep)) %>% 
     dplyr::mutate(plt_qty_chep_plt_qty_jde = plt_qty_chep - plt_qty_jde) %>% 
     dplyr::mutate(Match = ifelse(plt_qty_chep_plt_qty_jde == 0, "Y", "N")) %>% 
+    dplyr::filter(ship_or_receipt_jde != "Receipt") %>% 
     rename("Ship Location (CHEP)" = ship_location_chep,
            "Sender Name (CHEP)" = sender_name_chep,
            "Receipt Location (CHEP)" = receipt_location_chep,
