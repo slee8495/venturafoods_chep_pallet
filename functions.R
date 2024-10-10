@@ -45,40 +45,53 @@ as400_cleaning <- function(df) {
 
 # jde cleaning function
 jde_cleaning <- function(df) {
-  
   df_2 <- df %>%
-    clean_names() %>%
-    slice(-1:-3)
+    janitor::clean_names() %>%
+    dplyr::slice(-1:-3)
   
   colnames(df_2) <- df_2[1, ]
   
+  df_2 <- df_2 %>%
+    janitor::clean_names() %>%
+    dplyr::slice(-1)
+  
+  # Rename specific columns
+  colnames(df_2)[2] <- "legacy_order_number"
+  colnames(df_2)[3] <- "jde_order_number"
+  colnames(df_2)[4] <- "jde_bol_number"
+  colnames(df_2)[5] <- "customer_po_number"
+  colnames(df_2)[6] <- "pallet_type"
+  colnames(df_2)[8] <- "number"
+  colnames(df_2)[9] <- "number_of_pallets"
+  colnames(df_2)[10] <- "actual_ship_date"
+  
+  # Apply transformations and final processing
   df_2 %>%
-    janitor::clean_names() %>% 
-    dplyr::slice(-1) %>% 
-    mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
+    mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>%
     mutate(branch_plant = as.numeric(branch_plant)) %>%
-    dplyr::select(branch_plant, jde_order_number, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
-    dplyr::rename(plt_qty = number_of_pallets,
-                  ship_location = branch_plant) %>%
-    dplyr::mutate(actual_ship_date = as.numeric(actual_ship_date),
-                  receipt_date = as.numeric(receipt_date)) %>%
-    dplyr::mutate(actual_ship_date = as_date(actual_ship_date, origin = "1899-12-30"),
-                  receipt_date = as_date(receipt_date, origin = "1899-12-30")) %>%
-    dplyr::mutate(ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship")) %>%
-    dplyr::mutate(plt_qty = as.numeric(plt_qty)) %>% 
-    dplyr::rename_with(~ paste0(., "_jde")) %>% 
-    dplyr::mutate(customer_po_number_jde = ifelse(is.na(customer_po_number_jde), jde_order_number_jde, customer_po_number_jde)) %>%
-    dplyr::select(-jde_order_number_jde) %>% 
-    
-    # re-group
+    dplyr::select(branch_plant, jde_order_number, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>%
+    dplyr::rename(plt_qty = number_of_pallets, ship_location = branch_plant) %>%
+    dplyr::mutate(
+      actual_ship_date = as.numeric(actual_ship_date),
+      receipt_date = as.numeric(receipt_date),
+      actual_ship_date = as_date(actual_ship_date, origin = "1899-12-30"),
+      receipt_date = as_date(receipt_date, origin = "1899-12-30"),
+      ship_or_receipt = ifelse(is.na(actual_ship_date), "Receipt", "Ship"),
+      plt_qty = as.numeric(plt_qty)
+    ) %>%
+    dplyr::rename_with(~ paste0(., "_jde")) %>%
+    dplyr::mutate(
+      customer_po_number_jde = ifelse(is.na(customer_po_number_jde), jde_order_number_jde, customer_po_number_jde)
+    ) %>%
+    dplyr::select(-jde_order_number_jde) %>%
+    # Re-group and summarize
     dplyr::group_by(customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_location_jde, ship_or_receipt_jde) %>%
-    dplyr::summarise(plt_qty_jde = sum(plt_qty_jde)) %>%
-    
-    dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) %>% 
-    dplyr::filter(!is.na(plt_qty_jde)) 
-  
-  
+    dplyr::summarise(plt_qty_jde = sum(plt_qty_jde), .groups = 'drop') %>%
+    dplyr::relocate(ship_location_jde, customer_po_number_jde, actual_ship_date_jde, receipt_date_jde, ship_or_receipt_jde, plt_qty_jde) %>%
+    dplyr::filter(!is.na(plt_qty_jde))
+
 }
+
 
 
 # chep ref function

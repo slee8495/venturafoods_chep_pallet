@@ -8,7 +8,7 @@ library(janitor)
 library(lubridate)
 
 as400 <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/10th sample/AS400 021824.xlsx")
-jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/11th sample/jde.xlsx")
+jde <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/12th sample/3pl JDE.xlsx")
 chep <- read_xlsx("C:/Users/slee/OneDrive - Ventura Foods/Ventura Work/SCE/Project/FY 24/CHEP Pallet/11th sample/chep.xlsx")
 
 df <- chep
@@ -58,7 +58,22 @@ colnames(jde_2) <- jde_2[1, ]
 
 jde_2 %>% 
   janitor::clean_names() %>% 
-  dplyr::slice(-1) %>% 
+  dplyr::slice(-1) -> jde_2
+  
+
+colnames(jde_2)[2] <- "legacy_order_number"
+colnames(jde_2)[3] <- "jde_order_number"
+colnames(jde_2)[4] <- "jde_bol_number"
+colnames(jde_2)[5] <- "customer_po_number"
+colnames(jde_2)[6] <- "pallet_type"
+colnames(jde_2)[8] <- "number"
+colnames(jde_2)[9] <- "number_of_pallets"
+colnames(jde_2)[10] <- "actual_ship_date"
+
+
+
+
+jde_2 %>% 
   mutate(branch_plant = gsub("[^0-9]", "", branch_plant)) %>% 
   mutate(branch_plant = as.numeric(branch_plant)) %>%
   dplyr::select(branch_plant, jde_order_number, customer_po_number, number_of_pallets, actual_ship_date, receipt_date) %>% 
